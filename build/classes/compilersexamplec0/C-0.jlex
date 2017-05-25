@@ -1,0 +1,69 @@
+package compilersexamplec0;
+
+import java_cup.runtime.Symbol;  
+import java.lang.System;
+import java.io.*;
+
+%%
+%full
+%unicode
+%line
+%cup
+%char
+%eofval{
+	{ return Token(sym.EOF); }
+%eofval}
+
+%{
+	String tok = "";
+
+	private Symbol Token(int token, Object lexema) throws IOException {
+		int linea = yyline + 1;
+		tok = (String)lexema;
+		/*if (token != sym.EOF)
+			InformacionCodigo.guardarInformacionCodigo(linea,tok);*/
+		return new Symbol(token, lexema);
+	}
+
+	private Symbol Token(int token) throws IOException {
+		return Token(token, yytext());
+	}
+
+%}
+
+Digito = [0-9]
+Letra = [A-Za-z_]
+CadenaTexto = \"([\x20-\x21\x23-\xFE])*\"
+
+%%
+
+"(" 			{ return Token(sym.LPAREN); }
+")" 			{ return Token(sym.RPAREN); }
+";"  			{ return Token(sym.PTOCOMA); }
+"+" 			{ return Token(sym.SUMA); }
+"-" 			{ return Token(sym.RESTA); }
+"*" 			{ return Token(sym.PRODUCTO); }
+"/" 			{ return Token(sym.DIVISION); }
+"<" 			{ return Token(sym.MENOR); }
+">" 			{ return Token(sym.MAYOR); }
+"==" 			{ return Token(sym.IGUAL); }
+"!=" 	 		{ return Token(sym.DISTINTO); }  
+"||" 			{ return Token(sym.OR); }
+"&&" 			{ return Token(sym.AND); }
+"=" 			{ return Token(sym.ASIGNAR); }
+"{" 			{ return Token(sym.LLLAVE); }
+"}" 			{ return Token(sym.RLLAVE); }
+"int"			{ return Token(sym.INT); }
+"main" 			{ return Token(sym.MAIN); }
+"if"			{ return Token(sym.IF); }
+"else" 			{ return Token(sym.ELSE); }
+"while" 			{ return Token(sym.WHILE); }
+"puts" 			{ return Token(sym.PUTS); }
+"putw"			{ return Token(sym.PUTW); }
+"break"			{ return Token(sym.BREAK); }
+{CadenaTexto}   		{ return Token(sym.CADENATEXTO,yytext()); }
+{Letra}({Letra}|{Digito})*	{ return Token(sym.ID,yytext()); }
+{Digito}+			{ return Token(sym.ENTERO,yytext()); }
+(" "|\n|\t|\r)+		{ }
+
+. { System.err.println("Caracter no permitido: "+yytext()); }

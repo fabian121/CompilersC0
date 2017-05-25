@@ -1,0 +1,279 @@
+package compilersexamplec0;
+
+import java_cup.runtime.*;
+import java.util.*;
+import java.io.*;
+
+action code {:
+    public int contadorDireccion = 65536;
+    Tabla tabla;
+
+    void init(){
+        tabla = new Tabla();
+    }
+
+    //
+    boolean existeSimbolo(String id){
+
+        return tabla.encontrarSimbolo(id);
+    }
+
+    void agregarSimbolo(String id, int dir...){
+        return tabla.agregar(id, --contadorDireccion)
+    }
+:}
+
+parser code {:
+
+	static String nombreFichero;
+
+
+	// Muestra el texto de un error
+	public void report_error(String message) {
+		
+	}
+
+	// Muestra un error de sintaxis
+	public void syntax_error(Symbol actual) {
+		
+	}
+
+
+	// Muestra el texto de un error irrecuperable
+	public void report_fatal_error(String message, Object info) {
+		
+	}
+
+	// Muestra un mensaje cuando no se puede seguir analizando
+	public void unrecovered_syntax_error(Symbol actual) {
+	}
+
+	//Muestra un mensaje de error con linea, token y mensaje
+	public void error(String mensaje) {
+		
+	}
+
+:}
+
+//Terminales
+terminal LPAREN, RPAREN, PTOCOMA, SUMA, RESTA, PRODUCTO, DIVISION, MENOR, MAYOR, IGUAL, DISTINTO; 
+terminal OR, AND, ASIGNAR, LLLAVE, RLLAVE, INT, MAIN, IF, ELSE, WHILE, PUTS, PUTW; 
+terminal BREAK;
+terminal String ID;
+terminal String ENTERO;
+terminal String CADENATEXTO;
+
+// No terminales
+non terminal Programa, Declaraciones, Cuerpo;
+non terminal Declaracion;
+non terminal BloqueSentencias;
+non terminal Sentencias, Sentencia;
+non terminal Expresion Expresion;
+non terminal Expresion Condicion;
+non terminal SentIf, SentElse;
+non terminal SentWhile;
+non terminal SentAsignacion;
+non terminal SentPutw, SentPuts;
+non terminal SentBreak;
+
+//Precedencias de los operadores
+precedence left ASIGNAR;
+precedence left OR, AND;
+precedence left IGUAL, DISTINTO, MAYOR, MENOR;     
+precedence left SUMA, RESTA;
+precedence left PRODUCTO, DIVISION;
+precedence left LPAREN, RPAREN;
+precedence left ELSE;
+
+//Comienza con un no terminal
+
+start with Programa;
+
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//Aqui va la gramatica
+
+Programa ::= {:
+                init();
+             :}
+            Declaraciones Cuerpo | Cuerpo
+            
+            ;
+
+
+Declaraciones ::= Declaraciones Declaracion | Declaracion
+            ;
+
+
+Declaracion ::= INT ID:id PTOCOMA
+                {:
+                    //preguntar  si existe id
+                    if(!existeSimbolo(id)){
+                        agregarSimbolo()
+                    }else{
+                        parse.error(Mensajes.simboloRedeclarado);
+                    }
+                :}
+            ;
+
+Cuerpo ::= MAIN LPAREN RPAREN LLLAVE BloqueSentencias 
+			{: 
+				
+			:}
+	    RLLAVE
+            ;
+
+BloqueSentencias ::= Sentencias |;
+
+Sentencias ::= Sentencias Sentencia | Sentencia;
+
+Expresion ::= Expresion:e1 SUMA Expresion:e2 
+                    {:
+
+                    :}
+            |
+            Expresion:e1 RESTA Expresion:e2 
+                    {:
+
+                    :}
+            |
+            Expresion:e1 PRODUCTO Expresion:e2 
+                    {:
+
+                    :}
+            |
+            Expresion:e1 DIVISION Expresion:e2 
+                    {:
+
+                    :}
+            |
+            ENTERO:e 
+                    {:
+
+                    :}
+            |
+            ID:id 
+                    {:
+
+                    :}
+            |
+            LPAREN Expresion:e RPAREN 
+                    {:
+
+                    :}
+            ;
+
+Condicion ::= Condicion:c1 OR Condicion:c2 
+                        {:
+
+                        :}
+	        |
+		Condicion:c1 AND Condicion:c2 
+			{:
+                            
+			:}
+		|
+                Expresion:e1 IGUAL Expresion:e2 
+			{:
+                            
+			:}
+		|
+		Expresion:e1 DISTINTO Expresion:e2 
+			{:
+                            
+			:}
+		|
+		Expresion:e1 MAYOR Expresion:e2 
+			{:
+                            
+			:}
+		|
+		Expresion:e1 MENOR Expresion:e2 
+			{:
+                            
+			:}
+		|
+		LPAREN Condicion:c RPAREN
+			{:
+                            
+			:}
+                ;
+
+SentIf ::= IF LPAREN 
+			{:
+				
+			:}
+                Condicion:c 
+			{:
+				
+			:}
+                RPAREN LLLAVE BloqueSentencias RLLAVE 
+			{:
+				
+			:}
+                SentElse
+			{:
+				
+			:}
+                ;
+
+SentElse ::= ELSE LLLAVE BloqueSentencias RLLAVE |;
+
+SentWhile ::= WHILE LPAREN 
+			{:
+				
+			:}
+		Condicion:c
+			{:
+				
+			:} 
+		RPAREN LLLAVE 
+			{:
+				
+			:}
+		BloqueSentencias 
+			{:
+				
+			:}
+		RLLAVE
+			{:
+				
+			:}
+		;
+
+SentAsignacion ::= ID:id
+                    {:
+
+                    :} 
+                ASIGNAR Expresion:e PTOCOMA
+                    {:
+
+                    :}
+                ;
+
+SentPutw ::= PUTW LPAREN Expresion:e 
+                    {:
+
+                    :}
+	        RPAREN PTOCOMA;
+
+SentPuts ::= PUTS LPAREN CADENATEXTO:c
+                    {:
+
+                    :}
+	       RPAREN PTOCOMA;
+
+SentBreak ::= BREAK 
+                    {:
+
+                    :}
+		PTOCOMA;
+
+Sentencia ::= SentIf |
+              SentWhile |
+              SentAsignacion |
+              SentPutw |
+              SentPuts |
+              SentBreak
+            ;
